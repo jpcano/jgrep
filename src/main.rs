@@ -43,7 +43,7 @@ struct Config {
 
 impl Config {
     fn build(args: &[String]) -> Result<Config, &'static str> {
-        let mut insensitive: bool = false;
+        let insensitive: bool;
         let query: String;
         let file_path: String;
 
@@ -52,6 +52,7 @@ impl Config {
         } else if args.len() > 4 {
             return Err("too many arguments");
         } else if args.len() == 3 {
+            insensitive = false;
             query = args[1].clone();
             file_path = args[2].clone();
         } else {
