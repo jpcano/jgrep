@@ -1,4 +1,4 @@
-use jgrep::search;
+use jgrep::{search, search_insensitive};
 use std::error::Error;
 use std::{env, fs, process};
 
@@ -22,7 +22,13 @@ fn main() {
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.file_path)?;
 
-    for line in search(&config.query, &contents) {
+    let results = if config.insensitive {
+        search_insensitive(&config.query, &contents)
+    } else {
+        search(&config.query, &contents)
+    };
+
+    for line in results {
         println!("{line}");
     }
 
@@ -32,17 +38,35 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
 struct Config {
     query: String,
     file_path: String,
+    insensitive: bool,
 }
 
 impl Config {
     fn build(args: &[String]) -> Result<Config, &'static str> {
+        let mut insensitive: bool = false;
+        let query: String;
+        let file_path: String;
+
         if args.len() < 3 {
             return Err("not enough arguments");
+        } else if args.len() > 4 {
+            return Err("too many arguments");
+        } else if args.len() == 3 {
+            query = args[1].clone();
+            file_path = args[2].clone();
+        } else {
+            if args[1] != "--insensitive" {
+                return Err("option not recongnized");
+            }
+            insensitive = true;
+            query = args[2].clone();
+            file_path = args[3].clone();
         }
 
-        let query = args[1].clone();
-        let file_path = args[2].clone();
-
-        Ok(Config { query, file_path })
+        Ok(Config {
+            query,
+            file_path,
+            insensitive,
+        })
     }
 }
